@@ -1,7 +1,6 @@
-#include "header.h"
-#include <raylib.h>
+#include "gui.h"
 
 int main(void) {
-  displayMessage();
+  gameState();
   return 0;
 }

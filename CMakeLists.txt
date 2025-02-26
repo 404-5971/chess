@@ -1,13 +1,25 @@
 cmake_minimum_required(VERSION 3.10)
 project(chess VERSION 0.0.1)
 
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build: Debug or Release." FORCE)
+endif()
+
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release")
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "Building in Debug mode")
+    add_compile_options(-g -O0)  # Debug flags
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+    message(STATUS "Building in Release mode")
+    add_compile_options(-O3)  # Release flags
+endif()
+
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED True)
 
-# Ensure the compile_commands.json file is generated
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Set output directory within the build directory
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 if (WIN32)
@@ -39,16 +51,13 @@ elseif (UNIX)
     endif()
 endif()
 
-# Locate source files
 file(GLOB SOURCES "src/*.c")
-find_package(raylib)
+find_package(raylib REQUIRED)
 
-# Add executable target with source files
 add_executable(chess ${SOURCES})
-
-# Link header file directory
+add_compile_definitions(ASSET_PATH="${CMAKE_SOURCE_DIR}/assets/")
 target_include_directories(chess PRIVATE header raylib)
-target_link_libraries(raylib)
+target_link_libraries(chess PRIVATE raylib)
 
 if (MSVC)
     target_compile_options(chess PRIVATE /W4 /permissive-)

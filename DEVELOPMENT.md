@@ -1,14 +1,15 @@
 # Development Status & Roadmap
-Last Updated: 2024-03-19
+Last Updated: 2025-02-26
 
 ## Current Status (Pre-development)
-Start Date: 2024-03-19
+Start Date: 2025-02-26
 Project is in initial setup phase
 
 ## Phase 1: Foundation
 - [x] Project structure setup (Completed: 2025-02-26)
 - [x] Basic build system configuration (Completed: 2025-02-26)
-- [ ] Window creation and basic graphics setup
+- [x] Window creation and basic graphics setup
+i.e. : Board drawn successfully.
 - [ ] Basic event handling
 
 ## Phase 2: Core Chess Engine

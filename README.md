@@ -85,9 +85,17 @@ mkdir build
 cd build
 ```
 - Run the cmake command:
+1. Debug version
 ```
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Debug ..
+
 ```
+2. Release version
+```
+cmake -DCMAKE_BUILD_TYPE=Release ..
+
+```
+
 - Then inside the build direcotry make the executable wich is done via makefile.
 ``
 make

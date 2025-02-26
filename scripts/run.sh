@@ -9,4 +9,4 @@ fi
 
 cd build
 cd bin
-./app
+./chess
