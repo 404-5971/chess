@@ -127,6 +127,9 @@ cmake ..
 ## Future improvement
 Maybe add a network protocol that lets it play over the network.
 
+## Development Status
+For detailed information about the project's development progress and roadmap, see [DEVELOPMENT.md](DEVELOPMENT.md).
+
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
