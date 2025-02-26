@@ -3,6 +3,7 @@ build/
 .env
 .gitignore
 .clangd
+.cache/
 *.d
 
 # Object files
