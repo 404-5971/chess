@@ -11,20 +11,49 @@ struct Board {
 };
 
 void gameState(void) {
+  // Initialize window first
+  InitWindow(WIDTH, HEIGHT, "CHESS_GAME");
+  if (!IsWindowReady()) {
+    printf("Failed to initialize window\n");
+    return;
+  }
+
+  ShowCursor();
+
+  // Load icon after window initialization
   Image icon = LoadImage(ICON);
+  if (!icon.data) {
+    printf("Failed to load icon\n");
+    CloseWindow();
+    return;
+  }
+  SetWindowIcon(icon);
+
   struct Board *a = malloc(sizeof(struct Board));
-  struct ChessPieces pieces = loadChessPieces();
+  if (!a) {
+    printf("Failed to allocate board memory\n");
+    UnloadImage(icon);
+    CloseWindow();
+    return;
+  }
+
   GameState *gameState = malloc(sizeof(GameState));
+  if (!gameState) {
+    printf("Failed to allocate game state memory\n");
+    free(a);
+    UnloadImage(icon);
+    CloseWindow();
+    return;
+  }
+
+  // Load pieces after window initialization
+  struct ChessPieces pieces = loadChessPieces();
   *gameState = initializeGame();
 
   int width = 80;
   int height = 80;
   int posX = 0;
   int posY = 0;
-
-  InitWindow(WIDTH, HEIGHT, "CHESS_GAME");
-  ShowCursor();
-  SetWindowIcon(icon);
 
   if (IsWindowReady()) {
     while (!WindowShouldClose()) {
@@ -39,9 +68,9 @@ void gameState(void) {
 
           // Draw squares
           if ((row + col) % 2 == 0) {
-            DrawRectangle(posX, posY, width, height, BLACK);
+            DrawRectangle(posX, posY, width, height, BROWN);
           } else {
-            DrawRectangle(posX, posY, width, height, GRAY);
+            DrawRectangle(posX, posY, width, height, LIGHTGRAY);
           }
 
           // Draw pieces based on game state
@@ -92,10 +121,10 @@ void gameState(void) {
     }
   }
 
-  // Cleanup
+  // Cleanup in reverse order
+  unloadChessPieces(pieces);
   UnloadImage(icon);
-  free(a);
   free(gameState);
-  // TODO: Add UnloadTexture calls for all pieces
+  free(a);
   CloseWindow();
 }

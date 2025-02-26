@@ -3,8 +3,6 @@
 
 #include <raylib.h>
 
-#pragma message "ASSET_PATH is: " ASSET_PATH
-
 // Image path definitions
 #define WKING ASSET_PATH "images/whiteKing.png"
 #define BKING ASSET_PATH "images/blackKing.png"

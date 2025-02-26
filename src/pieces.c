@@ -4,94 +4,127 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Helper function to safely load an image and texture
-static Texture2D safeLoadTexture(const char *path) {
-  printf("Attempting to load: %s\n", path); // Debug print
+// Helper function to safely load an image and texture with cleanup on failure
+static Texture2D safeLoadTexture(const char *path, struct ChessPieces *pieces) {
+    printf("\n=== Loading Texture ===\n");
+    printf("Path: %s\n", path);
+    
+    Texture2D texture = {0};
 
-  // Check if the file exists before trying to load it
-  if (!FileExists(path)) {
-    printf("ERROR: File does not exist: %s\n", path);
-    exit(1);
-  }
+    if (!IsWindowReady()) {
+        printf("FATAL: Window not initialized\n");
+        unloadChessPieces(*pieces);
+        exit(1);
+    }
 
-  Image tempImage = LoadImage(path);
-  if (!tempImage.data) {
-    printf("ERROR: Failed to load image: %s\n", path);
-    exit(1);
-  }
+    if (!path) {
+        printf("FATAL: Null path provided\n");
+        unloadChessPieces(*pieces);
+        exit(1);
+    }
 
-  Texture2D texture = LoadTextureFromImage(tempImage);
-  if (texture.id == 0) {
-    printf("ERROR: Failed to create texture from image: %s\n", path);
+    if (!FileExists(path)) {
+        printf("FATAL: File does not exist at path: %s\n", path);
+        unloadChessPieces(*pieces);
+        exit(1);
+    }
+
+    Image tempImage = LoadImage(path);
+    if (!tempImage.data) {
+        printf("FATAL: Failed to load image data\n");
+        unloadChessPieces(*pieces);
+        exit(1);
+    }
+
+    printf("Image loaded successfully: %dx%d\n", tempImage.width, tempImage.height);
+
+    // Try to load texture directly without resizing
+    texture = LoadTextureFromImage(tempImage);
+    
+    // Always unload the image after creating texture
     UnloadImage(tempImage);
-    exit(1);
-  }
 
-  printf("Successfully loaded: %s\n", path); // Debug print
-  UnloadImage(tempImage);
-  return texture;
+    if (texture.id == 0) {
+        printf("FATAL: Failed to create texture\n");
+        unloadChessPieces(*pieces);
+        exit(1);
+    }
+
+    printf("Texture created successfully (ID: %u)\n", texture.id);
+    return texture;
 }
 
 struct ChessPieces loadChessPieces(void) {
-  struct ChessPieces pieces;
-  memset(&pieces, 0,
-         sizeof(struct ChessPieces)); // Initialize all fields to zero
+    struct ChessPieces pieces = {0};
 
-  // Load pieces one by one with careful error handling
-  printf("Loading chess pieces...\n");
+    if (!IsWindowReady()) {
+        printf("FATAL: Cannot load textures before window initialization\n");
+        exit(1);
+    }
 
-  pieces.whiteKing = safeLoadTexture(WKING);
-  pieces.blackKing = safeLoadTexture(BKING);
-  pieces.whiteQueen = safeLoadTexture(WQUEEN);
-  pieces.blackQueen = safeLoadTexture(BQUEEN);
+    // Load single pieces first
+    pieces.whiteKing = safeLoadTexture(WKING, &pieces);
+    pieces.blackKing = safeLoadTexture(BKING, &pieces);
+    pieces.whiteQueen = safeLoadTexture(WQUEEN, &pieces);
+    pieces.blackQueen = safeLoadTexture(BQUEEN, &pieces);
 
-  // Load paired pieces
-  for (int i = 0; i < 2; i++) {
-    printf("Loading piece set %d of 2\n", i + 1);
-    pieces.whiteRook[i] = safeLoadTexture(WROOK);
-    pieces.blackRook[i] = safeLoadTexture(BROOK);
-    pieces.whiteKnight[i] = safeLoadTexture(WKNIGHT);
-    pieces.blackKnight[i] = safeLoadTexture(BKNIGHT);
-    pieces.whiteBishop[i] = safeLoadTexture(WBISHOP);
-    pieces.blackBishop[i] = safeLoadTexture(BBISHOP);
-  }
+    // Load paired pieces
+    for (int i = 0; i < 2; i++) {
+        pieces.whiteRook[i] = safeLoadTexture(WROOK, &pieces);
+        pieces.blackRook[i] = safeLoadTexture(BROOK, &pieces);
+        pieces.whiteKnight[i] = safeLoadTexture(WKNIGHT, &pieces);
+        pieces.blackKnight[i] = safeLoadTexture(BKNIGHT, &pieces);
+        pieces.whiteBishop[i] = safeLoadTexture(WBISHOP, &pieces);
+        pieces.blackBishop[i] = safeLoadTexture(BBISHOP, &pieces);
+    }
 
-  // Load pawns
-  for (int i = 0; i < 8; i++) {
-    printf("Loading pawn set %d of 8\n", i + 1);
-    pieces.whitePawn[i] = safeLoadTexture(WPAWN);
-    pieces.blackPawn[i] = safeLoadTexture(BPAWN);
-  }
+    // Load pawns
+    for (int i = 0; i < 8; i++) {
+        pieces.whitePawn[i] = safeLoadTexture(WPAWN, &pieces);
+        pieces.blackPawn[i] = safeLoadTexture(BPAWN, &pieces);
+    }
 
-  printf("All chess pieces loaded successfully!\n");
-  return pieces;
+    return pieces;
 }
 
 void unloadChessPieces(struct ChessPieces pieces) {
-  printf("Unloading chess pieces...\n");
+    printf("\n=== Unloading Chess Pieces ===\n");
 
-  // Unload single pieces
-  UnloadTexture(pieces.whiteKing);
-  UnloadTexture(pieces.blackKing);
-  UnloadTexture(pieces.whiteQueen);
-  UnloadTexture(pieces.blackQueen);
+    // Unload single pieces
+    if (pieces.whiteKing.id) {
+        printf("Unloading White King...\n");
+        UnloadTexture(pieces.whiteKing);
+    }
+    if (pieces.blackKing.id) {
+        printf("Unloading Black King...\n");
+        UnloadTexture(pieces.blackKing);
+    }
+    if (pieces.whiteQueen.id) {
+        printf("Unloading White Queen...\n");
+        UnloadTexture(pieces.whiteQueen);
+    }
+    if (pieces.blackQueen.id) {
+        printf("Unloading Black Queen...\n");
+        UnloadTexture(pieces.blackQueen);
+    }
 
-  // Unload paired pieces
-  for (int i = 0; i < 2; i++) {
-    UnloadTexture(pieces.whiteRook[i]);
-    UnloadTexture(pieces.blackRook[i]);
-    UnloadTexture(pieces.whiteKnight[i]);
-    UnloadTexture(pieces.blackKnight[i]);
-    UnloadTexture(pieces.whiteBishop[i]);
-    UnloadTexture(pieces.blackBishop[i]);
-  }
+    // Unload paired pieces
+    for (int i = 0; i < 2; i++) {
+        printf("\nUnloading set %d of paired pieces...\n", i + 1);
+        if (pieces.whiteRook[i].id) UnloadTexture(pieces.whiteRook[i]);
+        if (pieces.blackRook[i].id) UnloadTexture(pieces.blackRook[i]);
+        if (pieces.whiteKnight[i].id) UnloadTexture(pieces.whiteKnight[i]);
+        if (pieces.blackKnight[i].id) UnloadTexture(pieces.blackKnight[i]);
+        if (pieces.whiteBishop[i].id) UnloadTexture(pieces.whiteBishop[i]);
+        if (pieces.blackBishop[i].id) UnloadTexture(pieces.blackBishop[i]);
+    }
 
-  // Unload pawns
-  for (int i = 0; i < 8; i++) {
-    UnloadTexture(pieces.whitePawn[i]);
-    UnloadTexture(pieces.blackPawn[i]);
-  }
+    // Unload pawns
+    for (int i = 0; i < 8; i++) {
+        if (pieces.whitePawn[i].id) UnloadTexture(pieces.whitePawn[i]);
+        if (pieces.blackPawn[i].id) UnloadTexture(pieces.blackPawn[i]);
+    }
 
-  printf("All chess pieces unloaded successfully!\n");
+    printf("=== All Chess Pieces Unloaded ===\n\n");
 }
 
