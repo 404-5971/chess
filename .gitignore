@@ -1,7 +1,8 @@
 /build/ 
 build/ 
+test/ 
+/test/ 
 .env
-.gitignore
 .clangd
 .cache/
 *.d
