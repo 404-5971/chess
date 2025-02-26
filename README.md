@@ -35,7 +35,6 @@ The commands are:
 1. Clone the project from github.
 ```
 git clone https://github.com/tsdios/chess.git 
-
  ```
 ```
 cd chess

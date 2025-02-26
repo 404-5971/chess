@@ -44,14 +44,14 @@ file(GLOB SOURCES "src/*.c")
 find_package(raylib)
 
 # Add executable target with source files
-add_executable(app ${SOURCES})
+add_executable(chess ${SOURCES})
 
 # Link header file directory
-target_include_directories(app PRIVATE header raylib)
+target_include_directories(chess PRIVATE header raylib)
 target_link_libraries(raylib)
 
 if (MSVC)
-    target_compile_options(app PRIVATE /W4 /permissive-)
+    target_compile_options(chess PRIVATE /W4 /permissive-)
 else()
-    target_compile_options(app PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(chess PRIVATE -Wall -Wextra -Wpedantic)
 endif()
