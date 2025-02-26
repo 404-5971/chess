@@ -127,3 +127,6 @@ cmake ..
 ## Future improvement
 Maybe add a network protocol that lets it play over the network.
 
+## License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
