@@ -20,8 +20,6 @@ The game is meant to be played between two people for now on the same computer.
 #### Extra For windows:
 Please install microsoft visual studio as it helps speed up the process for the cmake.
 
-## Features
-
 ## Build  Mechanism
 
 For this partical project I have made a two type build system a script based build system and a manual build system.
