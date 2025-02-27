@@ -86,6 +86,4 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 - Tournament mode
 - Custom themes and board styles
 
-## Authors
-- [Your Name] - *Initial work* - [GitHub Profile]
 
