@@ -1,8 +1,18 @@
 # Chess - Raylib
 
+<div align="center">
+    <img src="docs/images/image1.png" alt="Chess Board" width="600"/>
+    <p>Initial chess board setup</p>
+</div>
+
 ## Overview
 
-Experience chess in its purest form with smooth animations, intuitive controls, and classic gameplay. This implementation focuses on elegance and simplicity while maintaining full chess rule compliance.
+A fast and simple chess game designed for all platforms. Built with performance and accessibility in mind, this implementation strips away unnecessary complexity while maintaining the pure essence of chess.
+
+<div align="center">
+    <img src="docs/images/image2.png" alt="Gameplay" width="600"/>
+    <p>Gameplay demonstration</p>
+</div>
 
 ## Features
 - Intuitive drag-and-drop piece movement
@@ -17,6 +27,8 @@ git clone https://github.com/tsdios/chess.git
 cd chess
 sh scripts/build.sh  # or scripts\build.bat on Windows
 ```
+
+For detailed build instructions, including debug and release builds, see [docs/BUILD.md](docs/BUILD.md).
 
 ## Documentation
 Comprehensive documentation is available in the [docs](docs/README.md) directory:
@@ -41,9 +53,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgments
 - [Raylib](https://www.raylib.com/) for the graphics library
+- Chess piece designs by [Attribution if using specific assets]
 
 ## Copyright
-Copyright © 2024 [Tsdios]. All rights reserved.
+Copyright © 2024 [Your Name/Organization]. All rights reserved.
 
 ## Project Structure
 ```
