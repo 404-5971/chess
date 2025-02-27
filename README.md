@@ -51,7 +51,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgments
 - [Raylib](https://www.raylib.com/) for the graphics library
-- Chess piece designs by [Attribution if using specific assets]
+
 
 ## Copyright
 Copyright © 2024 [Your Name/Organization]. All rights reserved.
