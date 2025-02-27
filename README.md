@@ -1,141 +1,78 @@
 # Chess - Raylib
 
-This is a 2D chess game that is supposed to be cross platform and efficient to run. 
-The game is meant to be played between two people for now on the same computer.
+## Overview
 
-## Tech Stack used 
-1. Programming language : *C*
-2. Build System: [Cmake](https://cmake.org/)
-3. Library : [Raylib](https://www.raylib.com/)
+Experience chess in its purest form with smooth animations, intuitive controls, and classic gameplay. This implementation focuses on elegance and simplicity while maintaining full chess rule compliance.
 
-## Prerequisite
-1. *Compiler*  : 
--  [gcc](https://gcc.gnu.org/)  / [clang](https://releases.llvm.org/download.html) : For unix based system.
--  [mingw-gcc](https://sourceforge.net/projects/mingw-w64/)  / [MSCV](https://learn.microsoft.com/en-us/cpp/build/reference/compiler-options?view=msvc-170) : For Windows OS.
-2. *Build System*: 
-- [Cmake](https://cmake.org/)
-3. *Library* : 
-- [Raylib](https://www.raylib.com/)
+## Features
+- Intuitive drag-and-drop piece movement
+- Smooth animations and visual feedback
+- Full chess rule implementation
+- Checkmate detection with victory screen
+- Cross-platform compatibility
 
-#### Extra For windows:
-Please install microsoft visual studio as it helps speed up the process for the cmake.
-
-## Build  Mechanism
-
-For this partical project I have made a two type build system a script based build system and a manual build system.
-
-### Automatic / Script Based build system
-
-All you have to do for this is run the build script that is located in the script directory for the project file.
-Got to your project directory by opening the terminal
-The commands are:
-
-1. Clone the project from github.
-```
-git clone https://github.com/tsdios/chess.git 
- ```
-```
+## Quick Start
+```bash
+git clone https://github.com/tsdios/chess.git
 cd chess
-```
-2. After cloning it execute the build script
-
-- UNIX based System(*Linux*, *macOS*, *others*)
-```
-sh scripts/build.sh
-```
-This will create a build directory and build the project it self
-
-- Windows based system
-```
-scripts\build.bat
-```
-*This will have two out comes*:
-- The first one is that if visual studio exist visual studio solution will be created.
-- If not I will operate as simplar to as the unix system granted that we have to change some stuff of the file path.
-
-3. Simply the executable can be found in the * */build/bin* * directory
-- To run it :
-
- * UNIX Based system: 
-``` sh scripts/run.sh```
-
- * Windows system: 
- - Do this if you do not have visual studio if you do this will not work. 
-``` scripts\run.bat```
-### Manual building 
-
-1. *UNIX based system* and *Windows based system without visual studio*: 
-Got to your project directory by opening the terminal
-The commands are:
-
-- Clone the project from github.
-```
-git clone https://github.com/tsdios/chess.git 
-
-```
-```
-cd chess
-```
-- Create a build direcotry 
-```
-mkdir build
-```
-- Go to that directory
-```
-cd build
-```
-- Run the cmake command:
-1. Debug version
-```
-cmake -DCMAKE_BUILD_TYPE=Debug ..
-
-```
-2. Release version
-```
-cmake -DCMAKE_BUILD_TYPE=Release ..
-
+sh scripts/build.sh  # or scripts\build.bat on Windows
 ```
 
-- Then inside the build direcotry make the executable wich is done via makefile.
-``
-make
-``
-- Go to the bin direcotry and run it from there.
-```
-cd bin & ./chess
-```
-2. *Windows system with visual studio* :
+## Documentation
+Comprehensive documentation is available in the [docs](docs/README.md) directory:
+- [Getting Started Guide](docs/GETTING_STARTED.md)
+- [Architecture Overview](docs/ARCHITECTURE.md)
+- [API Reference](docs/API.md)
+- [Contributing Guidelines](docs/CONTRIBUTING.md)
 
-- Clone the project from github.
-```
-git clone https://github.com/tsdios/chess.git 
+## Controls
+- Left Mouse Button: Select and move pieces
+- ESC: Quit game
+- ENTER: Restart game (after checkmate)
 
-```
-```
-cd chess
-```
-- Create a build direcotry 
-```
-mkdir build
-```
-- Go to that directory
-```
-cd build
-```
-- Run the cmake command:
-```
-cmake ..
-```
-- Go to Explorer and click the visual studio solution created by this program.
-- Build a release version from there.
-
-
-## Future improvement
-Maybe add a network protocol that lets it play over the network.
-
-## Development Status
-For detailed information about the project's development progress and roadmap, see [DEVELOPMENT.md](DEVELOPMENT.md).
+## Future Vision
+- Network multiplayer support
+- AI opponent implementation
+- Tournament mode
+- Custom themes
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+- [Raylib](https://www.raylib.com/) for the graphics library
+
+## Copyright
+Copyright © 2024 [Tsdios]. All rights reserved.
+
+## Project Structure
+```
+chess/
+├── src/             # Source files
+├── header/          # Header files
+├── assets/          # Game assets (images)
+├── scripts/         # Build scripts
+├── tests/           # Test files
+└── docs/            # Documentation
+```
+
+## Contributing
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## Future Improvements
+- Network multiplayer support
+- AI opponent implementation
+- Move history and game replay
+- Save/Load game functionality
+- Tournament mode
+- Custom themes and board styles
+
+## Authors
+- [Your Name] - *Initial work* - [GitHub Profile]
 

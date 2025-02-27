@@ -36,12 +36,11 @@ static Texture2D safeLoadTexture(const char *path, struct ChessPieces *pieces) {
         exit(1);
     }
 
-    printf("Image loaded successfully: %dx%d\n", tempImage.width, tempImage.height);
+    // Resize image to 80x80
+    ImageResize(&tempImage, 80, 80);
+    printf("Image resized to: %dx%d\n", tempImage.width, tempImage.height);
 
-    // Try to load texture directly without resizing
     texture = LoadTextureFromImage(tempImage);
-    
-    // Always unload the image after creating texture
     UnloadImage(tempImage);
 
     if (texture.id == 0) {
