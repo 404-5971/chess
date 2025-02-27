@@ -6,7 +6,8 @@ test/
 .clangd
 .cache/
 *.d
-
+Todo.md
+todo.md
 # Object files
 *.o
 *.ko
