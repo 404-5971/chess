@@ -1,10 +1,5 @@
 # Chess - Raylib
 
-<div align="center">
-    <img src="docs/images/image1.png" alt="Chess Board" width="600"/>
-    <p>Initial chess board setup</p>
-</div>
-
 ## Overview
 
 A fast and simple chess game designed for all platforms. Built with performance and accessibility in mind, this implementation strips away unnecessary complexity while maintaining the pure essence of chess.
@@ -13,7 +8,10 @@ A fast and simple chess game designed for all platforms. Built with performance 
     <img src="docs/images/image2.png" alt="Gameplay" width="600"/>
     <p>Gameplay demonstration</p>
 </div>
-
+<div align="center">
+    <img src="docs/images/image1.png" alt="Chess Board" width="600"/>
+    <p>Initial chess board setup</p>
+</div>
 ## Features
 - Intuitive drag-and-drop piece movement
 - Smooth animations and visual feedback
