@@ -1,6 +1,7 @@
 #include "game_logic.h"
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 // Initialize the game board
 GameState initializeGame(void) {
@@ -13,7 +14,7 @@ GameState initializeGame(void) {
         game.board[6][i] = (Piece){PAWN, COLOR_WHITE, false};
     }
     
-    // Set up other pieces
+    // Set up other pieces with hasMoved = false
     // Black pieces
     game.board[0][0] = game.board[0][7] = (Piece){ROOK, COLOR_BLACK, false};
     game.board[0][1] = game.board[0][6] = (Piece){KNIGHT, COLOR_BLACK, false};
@@ -80,6 +81,7 @@ static bool isValidPawnMove(GameState* game, int fromX, int fromY, int toX, int 
 }
 
 static bool isValidKnightMove(GameState* game, int fromX, int fromY, int toX, int toY) {
+    (void)game; // Suppress unused parameter warning
     int dx = abs(toX - fromX);
     int dy = abs(toY - fromY);
     return (dx == 2 && dy == 1) || (dx == 1 && dy == 2);
@@ -104,9 +106,44 @@ static bool isValidQueenMove(GameState* game, int fromX, int fromY, int toX, int
 }
 
 static bool isValidKingMove(GameState* game, int fromX, int fromY, int toX, int toY) {
+    (void)game; // Suppress unused parameter warning
     int dx = abs(toX - fromX);
     int dy = abs(toY - fromY);
     return dx <= 1 && dy <= 1;
+}
+
+// Add helper function for castling
+static bool canCastle(GameState* game, int fromX, int fromY, int toX, int toY) {
+    Piece piece = game->board[fromY][fromX];
+    
+    if (piece.type != KING) return false;
+    if (piece.hasMoved) return false;
+    if (fromY != toY || abs(toX - fromX) != 2) return false;
+    
+    bool isKingside = (toX > fromX);
+    int rookX = isKingside ? 7 : 0;
+    
+    Piece rook = game->board[fromY][rookX];
+    if (rook.type != ROOK || rook.hasMoved) return false;
+    
+    int step = isKingside ? 1 : -1;
+    for (int x = fromX + step; x != rookX; x += step) {
+        if (game->board[fromY][x].type != EMPTY) return false;
+    }
+    
+    if (isInCheck(game, piece.color)) return false;
+    
+    int midX = fromX + step;
+    Piece tempPiece = game->board[fromY][midX];
+    game->board[fromY][midX] = piece;
+    game->board[fromY][fromX].type = EMPTY;
+    bool passesThroughCheck = isInCheck(game, piece.color);
+    game->board[fromY][fromX] = piece;
+    game->board[fromY][midX] = tempPiece;
+    
+    if (passesThroughCheck) return false;
+    
+    return true;
 }
 
 // Main move validation function
@@ -126,6 +163,11 @@ bool isValidMove(GameState* game, int fromX, int fromY, int toX, int toY) {
     if (game->board[toY][toX].type != EMPTY && 
         game->board[toY][toX].color == piece.color) {
         return false;
+    }
+    
+    // Check for castling
+    if (piece.type == KING && abs(toX - fromX) == 2) {
+        return canCastle(game, fromX, fromY, toX, toY);
     }
     
     // Piece-specific move validation
@@ -182,28 +224,101 @@ bool makeMove(GameState* game, Move move) {
         return false;
     }
     
-    // Make the move
-    Piece movingPiece = game->board[move.fromY][move.fromX];
-    game->board[move.toY][move.toX] = movingPiece;
-    game->board[move.fromY][move.fromX] = (Piece){EMPTY, COLOR_NONE, false};
+    Piece piece = game->board[move.fromY][move.fromX];
     
-    // Check if the move puts the moving player in check
-    if (isInCheck(game, movingPiece.color)) {
-        // Undo the move
-        game->board[move.fromY][move.fromX] = movingPiece;
-        game->board[move.toY][move.toX] = (Piece){EMPTY, COLOR_NONE, false};
-        return false;
+    // Handle castling
+    if (piece.type == KING && abs(move.toX - move.fromX) == 2) {
+        bool isKingside = (move.toX > move.fromX);
+        int rookFromX = isKingside ? 7 : 0;
+        int rookToX = isKingside ? move.toX - 1 : move.toX + 1;
+        
+        // Move rook
+        game->board[move.toY][rookToX] = game->board[move.toY][rookFromX];
+        game->board[move.toY][rookFromX].type = EMPTY;
+        game->board[move.toY][rookToX].hasMoved = true;
     }
+
+    // Make the move
+    game->board[move.toY][move.toX] = game->board[move.fromY][move.fromX];
+    game->board[move.fromY][move.fromX].type = EMPTY;
     
-    // Update game state
-    game->lastMove = move;
-    game->currentTurn = (game->currentTurn == COLOR_WHITE) ? COLOR_BLACK : COLOR_WHITE;
-    
-    // Update piece's moved status (for pawns, kings, rooks)
+    // Update hasMoved flag
     game->board[move.toY][move.toX].hasMoved = true;
+
+    // Switch turns
+    game->currentTurn = (game->currentTurn == COLOR_WHITE) ? COLOR_BLACK : COLOR_WHITE;
     
     // Check for check/checkmate on opponent
     game->isCheck = isInCheck(game, game->currentTurn);
     
     return true;
+}
+
+bool isCheckmate(GameState* game) {
+    // If not in check, it can't be checkmate
+    if (!isInCheck(game, game->currentTurn)) {
+        return false;
+    }
+    
+    // Try every possible move for the current player
+    for (int fromY = 0; fromY < 8; fromY++) {
+        for (int fromX = 0; fromX < 8; fromX++) {
+            // Only check pieces of current player
+            if (game->board[fromY][fromX].type != EMPTY && 
+                game->board[fromY][fromX].color == game->currentTurn) {
+                
+                // Try moving to every square
+                for (int toY = 0; toY < 8; toY++) {
+                    for (int toX = 0; toX < 8; toX++) {
+                        // Create temporary move
+                        Move testMove = {fromX, fromY, toX, toY};
+                        
+                        // Save current board state
+                        Piece tempBoard[8][8];
+                        memcpy(tempBoard, game->board, sizeof(tempBoard));
+                        
+                        // Try the move
+                        if (makeMove(game, testMove)) {
+                            // If move was successful, restore board and return false (not checkmate)
+                            memcpy(game->board, tempBoard, sizeof(tempBoard));
+                            return false;
+                        }
+                        
+                        // Restore board state
+                        memcpy(game->board, tempBoard, sizeof(tempBoard));
+                    }
+                }
+            }
+        }
+    }
+    
+    // If no legal moves found, it's checkmate
+    return true;
+}
+
+void getPossibleMoves(GameState* game, int x, int y, bool moves[8][8]) {
+    // Clear the moves array
+    memset(moves, 0, 64 * sizeof(bool));
+    
+    // Try every possible destination
+    for (int toY = 0; toY < 8; toY++) {
+        for (int toX = 0; toX < 8; toX++) {
+            // Create temporary move
+            Move testMove = {x, y, toX, toY};
+            
+            // Save current board state
+            Piece tempBoard[8][8];
+            memcpy(tempBoard, game->board, sizeof(tempBoard));
+            
+            // Try the move
+            if (makeMove(game, testMove)) {
+                moves[toY][toX] = true;
+                // Restore board state
+                memcpy(game->board, tempBoard, sizeof(tempBoard));
+            }
+            
+            // Restore board state
+            memcpy(game->board, tempBoard, sizeof(tempBoard));
+        }
+    }
 } 

@@ -4,6 +4,7 @@
 #include <raylib.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 struct Board {
   Rectangle black[32];
@@ -17,6 +18,36 @@ void gameState(void) {
     printf("Failed to initialize window\n");
     return;
   }
+
+  // Initialize audio with error checking
+  InitAudioDevice();
+  if (!IsAudioDeviceReady()) {
+    printf("Failed to initialize audio device\n");
+    CloseWindow();
+    return;
+  }
+
+  // Load sounds with error checking
+  Sound moveSound = LoadSound(MOVE_SOUND);
+  if (moveSound.frameCount == 0) {
+    printf("Failed to load move sound\n");
+    CloseAudioDevice();
+    CloseWindow();
+    return;
+  }
+
+  Sound captureSound = LoadSound(CAPTURE_SOUND);
+  if (captureSound.frameCount == 0) {
+    printf("Failed to load capture sound\n");
+    UnloadSound(moveSound);
+    CloseAudioDevice();
+    CloseWindow();
+    return;
+  }
+
+  // Set sound volume
+  SetSoundVolume(moveSound, 0.3f);
+  SetSoundVolume(captureSound, 0.7f);
 
   ShowCursor();
 
@@ -55,11 +86,12 @@ void gameState(void) {
   int posX = 0;
   int posY = 0;
 
-  // Add variables for piece dragging
+  // Variables for drag and drop
   Vector2 mousePosition = {0};
   bool isDragging = false;
-  int selectedX = -1, selectedY = -1;
-  Texture2D* draggedPiece = NULL;
+  int draggedX = -1, draggedY = -1;
+  Piece draggedPiece = {EMPTY, COLOR_NONE, false};
+  Vector2 dragOffset = {0};
 
   // Add variables for checkmate screen
   bool showCheckmateScreen = false;
@@ -67,42 +99,57 @@ void gameState(void) {
   const float flashSpeed = 2.0f;
   ColorPieces winner = COLOR_NONE;
 
+  SetTargetFPS(FPS);
+
   if (IsWindowReady()) {
     while (!WindowShouldClose()) {
       mousePosition = GetMousePosition();
       
-      // Handle mouse input
+      // Handle piece dragging
       if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-        // Convert mouse position to board coordinates
         int boardX = mousePosition.x / width;
         int boardY = mousePosition.y / height;
         
         if (boardX >= 0 && boardX < 8 && boardY >= 0 && boardY < 8) {
-          // Select piece if it belongs to current player
-          if (gameState->board[boardY][boardX].type != EMPTY &&
-              gameState->board[boardY][boardX].color == gameState->currentTurn) {
-            selectedX = boardX;
-            selectedY = boardY;
+          Piece piece = gameState->board[boardY][boardX];
+          if (piece.type != EMPTY && piece.color == gameState->currentTurn) {
             isDragging = true;
+            draggedX = boardX;
+            draggedY = boardY;
+            draggedPiece = piece;
+            // Calculate offset from piece center
+            dragOffset.x = (boardX * width + width/2) - mousePosition.x;
+            dragOffset.y = (boardY * height + height/2) - mousePosition.y;
           }
         }
       }
-      
-      if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && isDragging) {
-        // Convert release position to board coordinates
-        int toX = mousePosition.x / width;
-        int toY = mousePosition.y / height;
+
+      if (isDragging && IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) {
+        // Calculate drop position
+        int dropX = mousePosition.x / width;
+        int dropY = mousePosition.y / height;
         
-        if (toX >= 0 && toX < 8 && toY >= 0 && toY < 8) {
-          // Try to make the move
-          Move move = {selectedX, selectedY, toX, toY};
-          makeMove(gameState, move);
+        if (dropX >= 0 && dropX < 8 && dropY >= 0 && dropY < 8) {
+          Move move = {draggedX, draggedY, dropX, dropY};
+          bool isCapture = gameState->board[dropY][dropX].type != EMPTY;
+          
+          if (makeMove(gameState, move)) {
+            // Always play a sound on successful move
+            if (isCapture) {
+              StopSound(captureSound);  // Stop any currently playing sound
+              PlaySound(captureSound);
+            } else {
+              StopSound(moveSound);     // Stop any currently playing sound
+              PlaySound(moveSound);
+            }
+          }
         }
         
         // Reset drag state
         isDragging = false;
-        selectedX = -1;
-        selectedY = -1;
+        draggedX = -1;
+        draggedY = -1;
+        draggedPiece.type = EMPTY;
       }
 
       BeginDrawing();
@@ -115,49 +162,47 @@ void gameState(void) {
           posY = row * height;
 
           // Draw squares
-          if ((row + col) % 2 == 0) {
-            DrawRectangle(posX, posY, width, height, BROWN);
-          } else {
-            DrawRectangle(posX, posY, width, height, LIGHTGRAY);
-          }
+          Color squareColor = ((row + col) % 2 == 0) ? BROWN : LIGHTGRAY;
+          
+          DrawRectangle(posX, posY, width, height, squareColor);
 
-          // Draw pieces (skip dragged piece)
-          if (!(isDragging && col == selectedX && row == selectedY)) {
+          // Draw pieces (except dragged piece)
+          if (!(isDragging && col == draggedX && row == draggedY)) {
             Piece piece = gameState->board[row][col];
             if (piece.type != EMPTY) {
               switch (piece.type) {
               case KING:
                 DrawTexture(piece.color == COLOR_WHITE ? pieces.whiteKing
-                                                       : pieces.blackKing,
-                            posX, posY, WHITE);
+                                                     : pieces.blackKing,
+                          posX, posY, WHITE);
                 break;
               case QUEEN:
                 DrawTexture(piece.color == COLOR_WHITE ? pieces.whiteQueen
-                                                       : pieces.blackQueen,
-                            posX, posY, WHITE);
+                                                     : pieces.blackQueen,
+                          posX, posY, WHITE);
                 break;
               case ROOK:
                 DrawTexture(piece.color == COLOR_WHITE
-                                ? pieces.whiteRook[col == 0 ? 0 : 1]
-                                : pieces.blackRook[col == 0 ? 0 : 1],
+                              ? pieces.whiteRook[col == 0 ? 0 : 1]
+                              : pieces.blackRook[col == 0 ? 0 : 1],
                             posX, posY, WHITE);
                 break;
               case BISHOP:
                 DrawTexture(piece.color == COLOR_WHITE
-                                ? pieces.whiteBishop[col == 2 ? 0 : 1]
-                                : pieces.blackBishop[col == 2 ? 0 : 1],
+                              ? pieces.whiteBishop[col == 2 ? 0 : 1]
+                              : pieces.blackBishop[col == 2 ? 0 : 1],
                             posX, posY, WHITE);
                 break;
               case KNIGHT:
                 DrawTexture(piece.color == COLOR_WHITE
-                                ? pieces.whiteKnight[col == 1 ? 0 : 1]
-                                : pieces.blackKnight[col == 1 ? 0 : 1],
+                              ? pieces.whiteKnight[col == 1 ? 0 : 1]
+                              : pieces.blackKnight[col == 1 ? 0 : 1],
                             posX, posY, WHITE);
                 break;
               case PAWN:
                 DrawTexture(piece.color == COLOR_WHITE ? pieces.whitePawn[col]
-                                                       : pieces.blackPawn[col],
-                            posX, posY, WHITE);
+                                                     : pieces.blackPawn[col],
+                          posX, posY, WHITE);
                 break;
               default:
                 break;
@@ -167,47 +212,56 @@ void gameState(void) {
         }
       }
 
-      // Draw dragged piece at mouse position if dragging
+      // Draw dragged piece
       if (isDragging) {
-        Piece piece = gameState->board[selectedY][selectedX];
-        float drawX = mousePosition.x - width/2;
-        float drawY = mousePosition.y - height/2;
+        float drawX = mousePosition.x + dragOffset.x - width/2;
+        float drawY = mousePosition.y + dragOffset.y - height/2;
         
-        // Draw the dragged piece centered on mouse
-        switch (piece.type) {
-          case KING:
-            DrawTexture(piece.color == COLOR_WHITE ? pieces.whiteKing : pieces.blackKing,
-                      drawX, drawY, WHITE);
-            break;
-          case QUEEN:
-            DrawTexture(piece.color == COLOR_WHITE ? pieces.whiteQueen : pieces.blackQueen,
-                      drawX, drawY, WHITE);
-            break;
-          case ROOK:
-            DrawTexture(piece.color == COLOR_WHITE ? pieces.whiteRook[selectedX == 0 ? 0 : 1] : pieces.blackRook[selectedX == 0 ? 0 : 1],
-                      drawX, drawY, WHITE);
-            break;
-          case BISHOP:
-            DrawTexture(piece.color == COLOR_WHITE ? pieces.whiteBishop[selectedX == 2 ? 0 : 1] : pieces.blackBishop[selectedX == 2 ? 0 : 1],
-                      drawX, drawY, WHITE);
-            break;
-          case KNIGHT:
-            DrawTexture(piece.color == COLOR_WHITE ? pieces.whiteKnight[selectedX == 1 ? 0 : 1] : pieces.blackKnight[selectedX == 1 ? 0 : 1],
-                      drawX, drawY, WHITE);
-            break;
-          case PAWN:
-            DrawTexture(piece.color == COLOR_WHITE ? pieces.whitePawn[selectedX] : pieces.blackPawn[selectedX],
-                      drawX, drawY, WHITE);
-            break;
-          default:
-            break;
+        switch (draggedPiece.type) {
+        case KING:
+          DrawTexture(draggedPiece.color == COLOR_WHITE ? pieces.whiteKing
+                                                       : pieces.blackKing,
+                    drawX, drawY, WHITE);
+          break;
+        case QUEEN:
+          DrawTexture(draggedPiece.color == COLOR_WHITE ? pieces.whiteQueen
+                                                       : pieces.blackQueen,
+                    drawX, drawY, WHITE);
+          break;
+        case ROOK:
+          DrawTexture(draggedPiece.color == COLOR_WHITE
+                        ? pieces.whiteRook[draggedX == 0 ? 0 : 1]
+                        : pieces.blackRook[draggedX == 0 ? 0 : 1],
+                        drawX, drawY, WHITE);
+          break;
+        case BISHOP:
+          DrawTexture(draggedPiece.color == COLOR_WHITE
+                        ? pieces.whiteBishop[draggedX == 2 ? 0 : 1]
+                        : pieces.blackBishop[draggedX == 2 ? 0 : 1],
+                        drawX, drawY, WHITE);
+          break;
+        case KNIGHT:
+          DrawTexture(draggedPiece.color == COLOR_WHITE
+                        ? pieces.whiteKnight[draggedX == 1 ? 0 : 1]
+                        : pieces.blackKnight[draggedX == 1 ? 0 : 1],
+                        drawX, drawY, WHITE);
+          break;
+        case PAWN:
+          DrawTexture(draggedPiece.color == COLOR_WHITE ? pieces.whitePawn[draggedX]
+                                                       : pieces.blackPawn[draggedX],
+                    drawX, drawY, WHITE);
+          break;
+        default:
+          break;
         }
       }
 
-      // Check for checkmate after each move
+      // Check for checkmate
       if (isCheckmate(gameState)) {
-        showCheckmateScreen = true;
-        winner = (gameState->currentTurn == COLOR_WHITE) ? COLOR_BLACK : COLOR_WHITE;
+        if (!showCheckmateScreen) {
+          showCheckmateScreen = true;
+          winner = (gameState->currentTurn == COLOR_WHITE) ? COLOR_BLACK : COLOR_WHITE;
+        }
       }
 
       // Draw checkmate screen
@@ -222,7 +276,6 @@ void gameState(void) {
         const char* checkmateText = "CHECKMATE!";
         const char* pressKeyText = "Press ENTER to restart or ESC to quit";
 
-        // Calculate text positions for centering
         int winnerFontSize = 60;
         int checkmateFontSize = 80;
         int pressKeyFontSize = 20;
@@ -245,13 +298,9 @@ void gameState(void) {
         DrawText(checkmateText, checkmatePos.x, checkmatePos.y, checkmateFontSize, flashColor);
         DrawText(pressKeyText, pressKeyPos.x, pressKeyPos.y, pressKeyFontSize, WHITE);
 
-        // Handle restart or quit
         if (IsKeyPressed(KEY_ENTER)) {
-          // Reset game
           *gameState = initializeGame();
           showCheckmateScreen = false;
-        } else if (IsKeyPressed(KEY_ESCAPE)) {
-          break;
         }
       }
 
@@ -259,7 +308,12 @@ void gameState(void) {
     }
   }
 
-  // Cleanup in reverse order
+  // Cleanup audio properly
+  StopSound(moveSound);
+  StopSound(captureSound);
+  UnloadSound(moveSound);
+  UnloadSound(captureSound);
+  CloseAudioDevice();
   unloadChessPieces(pieces);
   UnloadImage(icon);
   free(gameState);
