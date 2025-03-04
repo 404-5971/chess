@@ -47,16 +47,22 @@ typedef struct {
     Move lastMove;
     // For en passant and castling
     bool canEnPassant;
-    int enPassantColumn;
+    int enPassantCol;
+    int enPassantRow;
+    bool canCastle;
+    bool canCastleLong;
+    bool canCastleShort;
 } GameState;
 
 // Function declarations
 GameState initializeGame(void);
 bool isValidMove(GameState *game, int fromX, int fromY, int toX, int toY);
+bool is_king_in_check(GameState* game, ColorPieces color);
 bool makeMove(GameState *game, Move move);
 bool isInCheck(GameState *game, ColorPieces color);
 bool isCheckmate(GameState *game);
 bool isStalemate(GameState *game);
+bool isKingCheckmated(GameState *game);
 void getPossibleMoves(GameState *game, int x, int y, bool moves[8][8]);
 
 #endif 

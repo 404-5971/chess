@@ -57,7 +57,7 @@ find_package(raylib REQUIRED)
 add_executable(chess ${SOURCES})
 add_compile_definitions(ASSET_PATH="${CMAKE_SOURCE_DIR}/assets/")
 target_include_directories(chess PRIVATE header raylib)
-target_link_libraries(chess PRIVATE raylib)
+target_link_libraries(chess PRIVATE raylib m)
 
 if (MSVC)
     target_compile_options(chess PRIVATE /W4 /permissive-)

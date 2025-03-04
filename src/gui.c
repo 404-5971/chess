@@ -5,11 +5,68 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h> // Include time.h for timer functionality
 
 struct Board {
   Rectangle black[32];
   Rectangle grey[32];
 };
+
+// Global variable for background texture
+Texture2D backgroundTexture;
+
+// Define themes
+typedef struct {
+    Color boardColor1;
+    Color boardColor2;
+} Theme;
+
+Theme themes[] = {
+    { BROWN, GRAY }, // Theme 1: Brown
+    { DARKGRAY, WHITE },   // Theme 2: Grey
+    { BLUE, WHITE },  // Theme 3: Blue
+};
+
+int currentTheme = 0; // Index for the current theme
+int totalThemes = sizeof(themes) / sizeof(themes[0]);
+
+// Timer variables
+int timer1 = 60; // Player 1 timer
+int timer2 = 60; // Player 2 timer
+bool isPlayer1Turn = true; // Track whose turn it is
+bool isPaused = false; // Track if the timer is paused
+
+void DrawTimer(int timer, Vector2 position) {
+    DrawText(TextFormat("Time Left: %02i:%02i", timer / 60, timer % 60), position.x, position.y, 20, BLACK);
+}
+
+void DrawSettingsMenu(bool *showSettings, Texture2D introTexture) {
+    BeginDrawing();
+    ClearBackground(WHITE);
+
+    // Draw the intro image as the background
+    DrawTexture(introTexture, 0, 0, WHITE); // Draw the intro texture
+
+    DrawText("Settings Menu", 350, 100, 40, BLACK);
+    DrawText("Press 'T' to change theme", 250, 200, 20, BLACK);
+    DrawText(TextFormat("Current Theme: %d", currentTheme + 1), 250, 240, 20, BLACK);
+    
+    // Draw buttons
+    Vector2 backButtonPos = { WIDTH / 2 - 50, HEIGHT / 2 + 80 };
+    Rectangle backButton = { backButtonPos.x, backButtonPos.y, 100, 30 };
+    DrawRectangleRec(backButton, LIGHTGRAY);
+    DrawText("Back", backButton.x + 30, backButton.y + 5, 20, BLACK);
+
+    // Check for mouse clicks
+    Vector2 mousePosition = GetMousePosition();
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+        if (CheckCollisionPointRec(mousePosition, backButton)) {
+            *showSettings = false; // Return to the game
+        }
+    }
+
+    EndDrawing();
+}
 
 void gameState(void) {
   // Initialize window first
@@ -77,23 +134,48 @@ void gameState(void) {
     return;
   }
 
+  // Load intro image
+  Image introImage = LoadImage(INTRO_IMAGE); // Update with your image path
+  if (introImage.data == NULL) {
+    printf("Failed to load intro image\n");
+    CloseWindow();
+    return; // Exit if the image fails to load
+  }
+
+  Texture2D introTexture = LoadTextureFromImage(introImage);
+  UnloadImage(introImage); // Unload the image after creating the texture
+
+  if (introTexture.id == 0) {
+    printf("Failed to create texture from intro image\n");
+    CloseWindow();
+    return; // Exit if the texture fails to create
+  }
+
+  // Intro screen variables
+  bool showIntroScreen = true;
+  bool showSettings = false; // Variable to track settings menu visibility
+
+  // Timer variables
+  int timer = 60; // 60 seconds countdown
+  time_t startTime = time(NULL);
+
+  backgroundTexture = LoadTexture("assets/chessboard.png");
+
   // Load pieces after window initialization
-  struct ChessPieces pieces = loadChessPieces();
   *gameState = initializeGame();
+  struct ChessPieces pieces = loadChessPieces();
 
   int width = 80;
   int height = 80;
   int posX = 0;
   int posY = 0;
 
-  // Variables for drag and drop
   Vector2 mousePosition = {0};
   bool isDragging = false;
   int draggedX = -1, draggedY = -1;
   Piece draggedPiece = {EMPTY, COLOR_NONE, false};
   Vector2 dragOffset = {0};
 
-  // Add variables for checkmate screen
   bool showCheckmateScreen = false;
   float checkmateAlpha = 0.0f;
   const float flashSpeed = 2.0f;
@@ -103,9 +185,57 @@ void gameState(void) {
 
   if (IsWindowReady()) {
     while (!WindowShouldClose()) {
+      if (showIntroScreen) {
+        BeginDrawing();
+        ClearBackground(WHITE);
+
+        // Draw the intro image
+        DrawTexture(introTexture, 0, 0, WHITE); // Draw the intro texture
+
+        // Define button positions and sizes
+        Vector2 playButtonPos = { WIDTH / 2 - 50, HEIGHT / 2 + 80 };
+        Vector2 quitButtonPos = { WIDTH / 2 - 50, HEIGHT / 2 + 120 };
+        Rectangle playButton = { playButtonPos.x, playButtonPos.y, 100, 30 };
+        Rectangle quitButton = { quitButtonPos.x, quitButtonPos.y, 100, 30 };
+
+        // Draw buttons
+        DrawRectangleRec(playButton, LIGHTGRAY);
+        DrawRectangleRec(quitButton, LIGHTGRAY);
+        DrawText("Play", playButton.x + 30, playButton.y + 5, 20, BLACK);
+        DrawText("Quit", quitButton.x + 30, quitButton.y + 5, 20, BLACK);
+
+        // Check for mouse clicks
+        Vector2 mousePosition = GetMousePosition();
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+          if (CheckCollisionPointRec(mousePosition, playButton)) {
+            showIntroScreen = false; // Proceed to the game
+          }
+          if (CheckCollisionPointRec(mousePosition, quitButton)) {
+            CloseWindow(); // Exit the game
+          }
+        }
+
+        EndDrawing();
+        continue; // Skip the rest of the loop for the intro screen
+      }
+
+      if (showSettings) {
+        DrawSettingsMenu(&showSettings, introTexture);
+        continue; // Skip the rest of the loop for the settings menu
+      }
+
+      // Update timer
+      time_t currentTime = time(NULL);
+      timer = 60 - (currentTime - startTime); // Countdown from 60 seconds
+
+      // Check if timer has expired
+      if (timer <= 0) {
+        // Handle timer expiration (e.g., end the game or reset)
+        timer = 0; // Prevent negative timer
+      }
+
       mousePosition = GetMousePosition();
       
-      // Handle piece dragging
       if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
         int boardX = mousePosition.x / width;
         int boardY = mousePosition.y / height;
@@ -117,7 +247,6 @@ void gameState(void) {
             draggedX = boardX;
             draggedY = boardY;
             draggedPiece = piece;
-            // Calculate offset from piece center
             dragOffset.x = (boardX * width + width/2) - mousePosition.x;
             dragOffset.y = (boardY * height + height/2) - mousePosition.y;
           }
@@ -125,7 +254,6 @@ void gameState(void) {
       }
 
       if (isDragging && IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) {
-        // Calculate drop position
         int dropX = mousePosition.x / width;
         int dropY = mousePosition.y / height;
         
@@ -161,9 +289,8 @@ void gameState(void) {
           posX = col * width;
           posY = row * height;
 
-          // Draw squares
-          Color squareColor = ((row + col) % 2 == 0) ? BROWN : LIGHTGRAY;
-          
+          // Draw squares with selected colors
+          Color squareColor = ((row + col) % 2 == 0) ? themes[currentTheme].boardColor1 : themes[currentTheme].boardColor2;
           DrawRectangle(posX, posY, width, height, squareColor);
 
           // Draw pieces (except dragged piece)
@@ -256,8 +383,21 @@ void gameState(void) {
         }
       }
 
+      // Draw timer
+      DrawTimer(timer, (Vector2){ 10, 10 });
+
+      // Check for theme change
+      if (IsKeyPressed(KEY_T)) { // Press 'T' to change theme
+        currentTheme = (currentTheme + 1) % totalThemes; // Cycle through themes
+      }
+
+      // Check for settings menu
+      if (IsKeyPressed(KEY_S)) { // Press 'S' to open settings
+        showSettings = true; // Open settings menu
+      }
+
       // Check for checkmate
-      if (isCheckmate(gameState)) {
+      if (isKingCheckmated(gameState)) {
         if (!showCheckmateScreen) {
           showCheckmateScreen = true;
           winner = (gameState->currentTurn == COLOR_WHITE) ? COLOR_BLACK : COLOR_WHITE;
@@ -273,11 +413,11 @@ void gameState(void) {
         DrawRectangle(0, 0, WIDTH, HEIGHT, overlayColor);
 
         const char* winnerText = (winner == COLOR_WHITE) ? "White Wins!" : "Black Wins!";
-        const char* checkmateText = "CHECKMATE!";
+        const char* checkmateText = "You have been checkmated!";
         const char* pressKeyText = "Press ENTER to restart or ESC to quit";
 
         int winnerFontSize = 60;
-        int checkmateFontSize = 80;
+        int checkmateFontSize = 40;
         int pressKeyFontSize = 20;
 
         Vector2 winnerPos = {
@@ -319,4 +459,8 @@ void gameState(void) {
   free(gameState);
   free(a);
   CloseWindow();
+
+  // Cleanup
+  UnloadTexture(backgroundTexture);
+  UnloadTexture(introTexture); // Unload the intro texture
 }

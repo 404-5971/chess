@@ -84,4 +84,7 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 - Tournament mode
 - Custom themes and board styles
 
+## Changelog
+For a detailed list of changes made in this project, please refer to the [CHANGELOG.md](docs/CHANGELOG.md).
+
 

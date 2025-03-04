@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Helper function to safely load an image and texture with cleanup on failure
 static Texture2D safeLoadTexture(const char *path, struct ChessPieces *pieces) {
     printf("\n=== Loading Texture ===\n");
     printf("Path: %s\n", path);
@@ -89,7 +88,6 @@ struct ChessPieces loadChessPieces(void) {
 void unloadChessPieces(struct ChessPieces pieces) {
     printf("\n=== Unloading Chess Pieces ===\n");
 
-    // Unload single pieces
     if (pieces.whiteKing.id) {
         printf("Unloading White King...\n");
         UnloadTexture(pieces.whiteKing);
@@ -107,7 +105,6 @@ void unloadChessPieces(struct ChessPieces pieces) {
         UnloadTexture(pieces.blackQueen);
     }
 
-    // Unload paired pieces
     for (int i = 0; i < 2; i++) {
         printf("\nUnloading set %d of paired pieces...\n", i + 1);
         if (pieces.whiteRook[i].id) UnloadTexture(pieces.whiteRook[i]);
