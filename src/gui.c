@@ -5,14 +5,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h> // Include time.h for timer functionality
-
+#include <time.h>
 struct Board {
   Rectangle black[32];
   Rectangle grey[32];
 };
 
-// Global variable for background texture
 Texture2D backgroundTexture;
 
 // Define themes
@@ -21,24 +19,14 @@ typedef struct {
     Color boardColor2;
 } Theme;
 
-Theme themes[] = {
-    { BROWN, GRAY }, // Theme 1: Brown
-    { DARKGRAY, WHITE },   // Theme 2: Grey
-    { BLUE, WHITE },  // Theme 3: Blue
-};
 
-int currentTheme = 0; // Index for the current theme
-int totalThemes = sizeof(themes) / sizeof(themes[0]);
+const Theme theme = { {150, 75, 0, 255}, {130, 130, 130, 255} };
 
-// Timer variables
 int timer1 = 60; // Player 1 timer
 int timer2 = 60; // Player 2 timer
 bool isPlayer1Turn = true; // Track whose turn it is
 bool isPaused = false; // Track if the timer is paused
 
-void DrawTimer(int timer, Vector2 position) {
-    DrawText(TextFormat("Time Left: %02i:%02i", timer / 60, timer % 60), position.x, position.y, 20, BLACK);
-}
 
 void DrawSettingsMenu(bool *showSettings, Texture2D introTexture) {
     BeginDrawing();
@@ -48,10 +36,7 @@ void DrawSettingsMenu(bool *showSettings, Texture2D introTexture) {
     DrawTexture(introTexture, 0, 0, WHITE); // Draw the intro texture
 
     DrawText("Settings Menu", 350, 100, 40, BLACK);
-    DrawText("Press 'T' to change theme", 250, 200, 20, BLACK);
-    DrawText(TextFormat("Current Theme: %d", currentTheme + 1), 250, 240, 20, BLACK);
     
-    // Draw buttons
     Vector2 backButtonPos = { WIDTH / 2 - 50, HEIGHT / 2 + 80 };
     Rectangle backButton = { backButtonPos.x, backButtonPos.y, 100, 30 };
     DrawRectangleRec(backButton, LIGHTGRAY);
@@ -290,7 +275,7 @@ void gameState(void) {
           posY = row * height;
 
           // Draw squares with selected colors
-          Color squareColor = ((row + col) % 2 == 0) ? themes[currentTheme].boardColor1 : themes[currentTheme].boardColor2;
+          Color squareColor = ((row + col) % 2 == 0) ? theme.boardColor1 : theme.boardColor2;
           DrawRectangle(posX, posY, width, height, squareColor);
 
           // Draw pieces (except dragged piece)
@@ -384,12 +369,7 @@ void gameState(void) {
       }
 
       // Draw timer
-      DrawTimer(timer, (Vector2){ 10, 10 });
-
-      // Check for theme change
-      if (IsKeyPressed(KEY_T)) { // Press 'T' to change theme
-        currentTheme = (currentTheme + 1) % totalThemes; // Cycle through themes
-      }
+      //DrawTimer(timer, (Vector2){ 10, 10 });
 
       // Check for settings menu
       if (IsKeyPressed(KEY_S)) { // Press 'S' to open settings
