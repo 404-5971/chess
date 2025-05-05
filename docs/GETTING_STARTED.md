@@ -3,13 +3,12 @@
 ## Prerequisites
 - C Compiler (gcc/clang for Unix, mingw-gcc/MSVC for Windows)
 - CMake (3.10 or higher)
-- Raylib library
 
 ## Building from Source
 
 ### Unix-based Systems (Linux, macOS)
 ```bash
-git clone https://github.com/tsdios/chess.git
+git clone https://github.com/xsoder/chess.git
 cd chess
 sh scripts/build.sh
 sh scripts/run.sh
@@ -17,7 +16,7 @@ sh scripts/run.sh
 
 ### Windows
 ```bash
-git clone https://github.com/tsdios/chess.git
+git clone https://github.com/xsoder/chess.git
 cd chess
 scripts\build.bat
 scripts\run.bat
