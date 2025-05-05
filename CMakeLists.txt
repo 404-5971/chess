@@ -98,7 +98,7 @@ if(NOT MSVC)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 endif()
 
-arget_link_libraries(chess
+target_link_libraries(chess
     ${RAYLIB_LIB}
     m
     pthread
