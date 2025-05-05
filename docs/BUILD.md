@@ -31,32 +31,11 @@ brew install cmake
 choco install mingw cmake git
 ```
 
-## Installing Raylib
-
-### Automatic Installation
-```bash
-./scripts/install_raylib.sh  # Unix
-# OR
-scripts\install_raylib.bat   # Windows
-```
-
-### Manual Installation
-```bash
-git clone https://github.com/raysan5/raylib.git
-cd raylib
-mkdir build && cd build
-cmake -DBUILD_SHARED_LIBS=ON ..
-make
-sudo make install  # Unix
-# OR
-make install       # Windows (run as administrator)
-```
-
 ## Building the Game
 
 ### Debug Build
 ```bash
-git clone https://github.com/tsdios/chess.git
+git clone https://github.com/xsoder/chess.git
 cd chess
 mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=Debug ..
@@ -71,7 +50,7 @@ The debug build includes:
 
 ### Release Build
 ```bash
-git clone https://github.com/tsdios/chess.git
+git clone https://github.com/xsoder/chess.git
 cd chess
 mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
