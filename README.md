@@ -21,7 +21,7 @@ A fast and simple chess game designed for all platforms. Built with performance 
 
 ## Quick Start
 ```bash
-git clone https://github.com/tsdios/chess.git
+git clone https://github.com/xsoder/chess.git
 cd chess
 sh scripts/build.sh  # or scripts\build.bat on Windows
 ```

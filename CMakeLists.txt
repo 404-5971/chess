@@ -28,10 +28,10 @@ if (WIN32)
 
     if (MSVC)  # If we're using MSVC (Microsoft Visual Studio Compiler)
         message(STATUS "Using MSVC compiler")
-        
+
         # Set platform for MSVC
         set(CMAKE_GENERATOR_PLATFORM x64)  # You can customize this if you want a 32-bit build
-        
+
         # MSVC specific flags (MSVC doesn't support -g or -O0, so we use /Zi for debugging and /O2 for optimization)
         if(CMAKE_BUILD_TYPE STREQUAL "Debug")
             add_compile_options(/Zi)  # Enable debugging symbols for MSVC
@@ -79,19 +79,14 @@ endif()
 # Include the source files for the project
 file(GLOB SOURCES "src/*.c")
 
-# Set the path to the vendor directory for raylib
-set(RAYLIB_DIR "${CMAKE_SOURCE_DIR}/vendor/raylib")
-
-# Add raylib as a subdirectory
-add_subdirectory(${RAYLIB_DIR} vendor/raylib)
-
 # Create the executable target
 add_executable(chess ${SOURCES})
 
 # Add necessary compile definitions and include directories
 add_compile_definitions(ASSET_PATH="${CMAKE_SOURCE_DIR}/assets/")
-target_include_directories(chess PRIVATE ${CMAKE_SOURCE_DIR}/header)
+target_include_directories(chess PRIVATE ${CMAKE_SOURCE_DIR}/vendor/raylib/include ${CMAKE_SOURCE_DIR}/header)
 
+set(RAYLIB_LIB ${CMAKE_SOURCE_DIR}/vendor/raylib/lib/libraylib.a)
 # Apply compiler-specific options
 if (MSVC)
     target_compile_options(chess PRIVATE /W4 /permissive-)
@@ -99,18 +94,18 @@ else()
     target_compile_options(chess PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
-# Set the output directory for the build (only if not using MSVC)
 if(NOT MSVC)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 endif()
 
-# Link raylib to chess target after it's been created
-if(WIN32 AND MSVC)
-    target_link_libraries(chess PRIVATE raylib)
-else()
-    target_link_libraries(chess PRIVATE raylib m)
-endif()
-
+arget_link_libraries(chess
+    ${RAYLIB_LIB}
+    m
+    pthread
+    dl
+    rt
+    X11
+)
 # Ensure assets are copied to the build directory after build (for all platforms)
 add_custom_command(TARGET chess POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
