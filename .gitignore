@@ -1,11 +1,10 @@
-/build/ 
-build/ 
-test/ 
-/test/ 
+/build/
+build/
+test/
+/test/
 .env
 .clangd
 .cache/
-*.d
 Todo.md
 todo.md
 # Object files
@@ -24,11 +23,6 @@ todo.md
 *.pch
 
 # Libraries
-*.lib
-*.a
-*.la
-*.lo
-
 # Shared objects (inc. Windows DLLs)
 *.dll
 *.so

@@ -58,8 +58,6 @@ if (WIN32)
             add_compile_options(-O3)  # Release flags for GCC/Clang
         endif()
 
-        # Link raylib for non-MSVC (including math library for UNIX systems)
-        target_link_libraries(chess PRIVATE raylib m)
     endif()
 
 elseif (APPLE)
@@ -84,9 +82,9 @@ add_executable(chess ${SOURCES})
 
 # Add necessary compile definitions and include directories
 add_compile_definitions(ASSET_PATH="${CMAKE_SOURCE_DIR}/assets/")
-target_include_directories(chess PRIVATE ${CMAKE_SOURCE_DIR}/vendor/raylib/include ${CMAKE_SOURCE_DIR}/header)
+target_include_directories(chess PRIVATE ${CMAKE_SOURCE_DIR}/header)
 
-set(RAYLIB_LIB ${CMAKE_SOURCE_DIR}/vendor/raylib/lib/libraylib.a)
+set(RAYLIB_LIB ${CMAKE_SOURCE_DIR}/lib/libraylib.a)
 # Apply compiler-specific options
 if (MSVC)
     target_compile_options(chess PRIVATE /W4 /permissive-)
